@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Lab Kesehatan Daerah</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="h1">Dashboard Lab Kesehatan Daerah</div>
+        <div class="sub">Prototype statis untuk rekap pemeriksaan, tren operasional, dan SLA (data mock).</div>
+      </div>
+      <div class="pill" title="Prototype berbasis data mock">
+        <span class="pillDot"></span>
+        <span>Mode: Data Mock · 30 hari terakhir</span>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <section class="card" aria-label="Filter">
+      <div class="cardTitle">
+        <span>Filter Rekap & Grafik</span>
+      </div>
+
+      <div class="controls">
+        <div class="control">
+          <div class="label">Dari tanggal</div>
+          <input id="fromDate" type="date" />
+        </div>
+        <div class="control">
+          <div class="label">Sampai tanggal</div>
+          <input id="toDate" type="date" />
+        </div>
+        <div class="control">
+          <div class="label">Shift</div>
+          <select id="shift"></select>
+        </div>
+        <div class="control">
+          <div class="label">Jenis pemeriksaan</div>
+          <select id="jenis"></select>
+        </div>
+
+        <div class="control" style="grid-column: span 4;">
+          <div class="label">Pencarian</div>
+          <input id="search" type="text" placeholder="Cari ID / Jenis / Lokasi / Shift..." />
+        </div>
+        <div class="control" style="grid-column: span 3;">
+          <div class="label">Mode grafik</div>
+          <select id="chartMode">
+            <option value="Harian">Harian</option>
+            <option value="Mingguan">Mingguan</option>
+          </select>
+        </div>
+        <div class="control" style="grid-column: span 5;">
+          <div class="label">Ekspor</div>
+          <div class="btnRow">
+            <button id="exportBtn" type="button">Ekspor CSV</button>
+          </div>
+          <div id="exportNote" class="exportNote"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI -->
+    <section class="kpiRow" style="margin-top:14px;">
+      <div class="kpi" aria-label="KPI Sampel">
+        <div class="kpiTop">
+          <div class="kpiName">Sampel Masuk (terfilter)</div>
+          <div class="badge" style="border-color: rgba(79,124,255,.35); background: rgba(79,124,255,.10); color:#d7e4ff">Total</div>
+        </div>
+        <div id="kpiSamples" class="kpiValue">0</div>
+        <div class="kpiHint">Jumlah pemeriksaan yang masuk pada periode yang dipilih.</div>
+      </div>
+
+      <div class="kpi" aria-label="KPI Selesai">
+        <div class="kpiTop">
+          <div class="kpiName">Pemeriksaan Selesai</div>
+          <div class="badge ok">Done</div>
+        </div>
+        <div id="kpiDone" class="kpiValue">0</div>
+        <div class="kpiHint">Item dengan status: selesai.</div>
+      </div>
+
+      <div class="kpi" aria-label="KPI SLA">
+        <div class="kpiTop">
+          <div class="kpiName">Kepatuhan SLA Tepat Waktu</div>
+          <div class="badge warn">SLA</div>
+        </div>
+        <div id="kpiSla" class="kpiValue">0%</div>
+        <div class="kpiHint">Persentase item yang sesuai target SLA berdasarkan data mock.</div>
+      </div>
+
+      <div class="kpi" aria-label="KPI Rata-rata waktu">
+        <div class="kpiTop">
+          <div class="kpiName">Rata-rata Waktu Proses</div>
+          <div class="badge" style="border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08); color:#c8ffe1">Avg</div>
+        </div>
+        <div id="kpiAvgTime" class="kpiValue">0 jam</div>
+        <div class="kpiHint">Estimasi rata-rata waktu proses per item (jam).</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:14px;">
+      <!-- Queue -->
+      <section class="queueGrid card" style="grid-column: span 12;">
+        <div class="queueItem">
+          <div class="queueTitle">Antrian / Item Selesai</div>
+          <div style="font-size:28px; font-weight:950;" id="queueDone">0</div>
+          <div class="sub" style="margin-top:6px; font-size:12px;">Ringkasan untuk periode terfilter.</div>
+        </div>
+        <div class="queueItem">
+          <div class="queueTitle">Backlog / Tertunda</div>
+          <div style="font-size:28px; font-weight:950;" id="queueBacklog">0</div>
+          <div class="sub" style="margin-top:6px; font-size:12px;">Item yang belum selesai / terlambat (mock).</div>
+        </div>
+      </section>
+
+      <!-- Chart + Table -->
+      <section class="card" style="grid-column: span 12;">
+        <div class="cardTitle">
+          <span id="chartTitle">Tren</span>
+          <span style="color:var(--muted); font-size:12px; font-weight:800;">Klik header tabel untuk sorting</span>
+        </div>
+        <div class="chartArea">
+          <div class="chartGrid" aria-label="Grafik Tren">
+            <div id="chartBars" style="display:flex; width:100%; height:100%; align-items:flex-end; gap:10px; justify-content:space-between;"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: span 12;">
+        <div class="cardTitle">
+          <span>Rekap Pemeriksaan (Tabel)</span>
+          <span style="color:var(--muted); font-size:12px; font-weight:800;">Maks 500 baris ditampilkan</span>
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-sort="id">ID</th>
+                <th data-sort="tanggalMasuk">Tanggal Masuk</th>
+                <th data-sort="shift">Shift</th>
+                <th data-sort="jenisPemeriksaan">Jenis</th>
+                <th data-sort="lokasiSampel">Lokasi</th>
+                <th data-sort="status">Status</th>
+                <th data-sort="waktuProsesJam">Waktu Proses</th>
+                <th data-sort="slaKepatuhan">SLA</th>
+                <th data-sort="tanggalSelesai">Tanggal Selesai</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="empty">Tidak ada data pada filter yang dipilih.</div>
+      </section>
+    </div>
+
+  </div>
+
+  <script src="data/mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
